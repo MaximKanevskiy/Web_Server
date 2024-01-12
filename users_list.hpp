@@ -72,3 +72,32 @@ void update_users_list(std::vector<User>* users, mongocxx::v_noabi::collection c
         }
     }
 }
+
+std::vector<User> make_admins_list(std::vector<User> users)
+{
+    std::vector<User> admins;
+    std::vector<User> all_users = users;
+
+    for (const auto& user : all_users)
+    {
+        if (user.role == "Administrator")
+        {
+            admins.push_back(user);
+        }
+    }
+
+    return admins;
+}
+
+bool is_in_admins_list(const std::string& name, const std::vector<User>& admins)
+{
+    for (const auto& admin : admins)
+    {
+        if (admin.name == name)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}

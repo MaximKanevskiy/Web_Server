@@ -47,7 +47,7 @@ void deleteUserHandler(const Request& req, Response& res);
 void uploadFileHandler(const Request& req, Response& res);
 void sendFileHandler(const Request& req, Response& res);
 
-int main() 
+int main()
 {
     Server server;
     server.Get("/", login—heck(homeHandler));
@@ -62,7 +62,7 @@ int main()
     server.listen("0.0.0.0", 8080);
 }
 
-static bool is_session_exist(const Request& req) 
+static bool is_session_exist(const Request& req)
 {
     auto cookie = Cookie::get_cookie(req, "user_cookie");
 
@@ -73,29 +73,29 @@ static bool is_session_exist(const Request& req)
     return true;
 }
 
-httplib::Server::Handler login—heck(httplib::Server::Handler next) 
+httplib::Server::Handler login—heck(httplib::Server::Handler next)
 {
-    return [next](const Request& req, Response& res) 
-    {
-        if (!is_session_exist(req) && req.path != "/login") 
+    return [next](const Request& req, Response& res)
         {
-            res.set_redirect("/login");
-            return;
-        }
+            if (!is_session_exist(req) && req.path != "/login")
+            {
+                res.set_redirect("/login");
+                return;
+            }
 
-        if (is_session_exist(req) && req.path == "/login") 
-        {
-            res.set_redirect("/");
-            return;
-        }
+            if (is_session_exist(req) && req.path == "/login")
+            {
+                res.set_redirect("/");
+                return;
+            }
 
-        next(req, res);
-    };
+            next(req, res);
+        };
 }
 
-void loginHandler(const Request& req, Response& res) 
+void loginHandler(const Request& req, Response& res)
 {
-    if (req.method == "GET") 
+    if (req.method == "GET")
     {
         std::string page = u8R"#(
             <!DOCTYPE html>
@@ -159,7 +159,7 @@ void loginHandler(const Request& req, Response& res)
         res.set_content(page, "text/html");
     }
 
-    if (req.method == "POST") 
+    if (req.method == "POST")
     {
         auto administrators = make_admins_list(users);
 
@@ -189,7 +189,7 @@ void loginHandler(const Request& req, Response& res)
     }
 }
 
-void homeHandler(const Request& req, Response& res) 
+void homeHandler(const Request& req, Response& res)
 {
     auto cookie = Cookie::get_cookie(req, "user_cookie");
     auto& session = sessions[cookie.value];
@@ -317,19 +317,19 @@ void logoutHandler(const Request& req, Response& res)
         new_cookie.maxAge = -1;
 
         Cookie::set_cookie(res, new_cookie);
-        
+
         res.set_redirect("/login");
     }
 }
 
-void updateRoleHandler(const Request& req, Response& res) 
+void updateRoleHandler(const Request& req, Response& res)
 {
     std::string username = req.get_param_value("username");
     std::string newRole = req.get_param_value("role");
 
-    for (auto& user : users) 
+    for (auto& user : users)
     {
-        if (user.name == username) 
+        if (user.name == username)
         {
             user.role = newRole;
             break;
@@ -350,9 +350,9 @@ void updateRoleHandler(const Request& req, Response& res)
     res.set_redirect("/");
 }
 
-void deleteUserFromVector(const std::string& username) 
+void deleteUserFromVector(const std::string& username)
 {
-    users.erase(std::remove_if(users.begin(), users.end(), 
+    users.erase(std::remove_if(users.begin(), users.end(),
         [&username](const User& user) { return user.name == username; }), users.end());
 }
 
@@ -382,25 +382,25 @@ void deleteUserHandler(const Request& req, Response& res)
     }
 }
 
-void send_file_to_server(const std::string& server_path, const std::string& file_path) 
+void send_file_to_server(const std::string& server_path, const std::string& file_path)
 {
     httplib::Client cli("26.38.28.245", 8090);
 
     std::ifstream input_file(file_path, std::ios::binary);
     std::vector<char> file_data((std::istreambuf_iterator<char>(input_file)), std::istreambuf_iterator<char>());
 
-    httplib::MultipartFormDataItems items = 
+    httplib::MultipartFormDataItems items =
     {
         { "file", file_data.data(), file_path, "application/octet-stream" },
     };
 
     auto res = cli.Post(server_path.c_str(), items);
 
-    if (res && res->status == 200) 
+    if (res && res->status == 200)
     {
         std::cout << "File sent successfully\n";
     }
-    else 
+    else
     {
         std::cout << "Failed to send file\n";
     }
