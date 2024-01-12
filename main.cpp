@@ -161,12 +161,14 @@ void loginHandler(const Request& req, Response& res)
 
     if (req.method == "POST") 
     {
+        auto administrators = make_admins_list(users);
+
         const std::string correct_password = "15123415";
 
         auto username = req.has_param("username") ? req.get_param_value("username") : "";
         auto password = req.has_param("password") ? req.get_param_value("password") : "";
 
-        if (username != "" && password == correct_password)
+        if (is_in_admins_list(username, administrators) && password == correct_password)
         {
             Cookie cookie;
             cookie.name = "user_cookie";
