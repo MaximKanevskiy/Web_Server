@@ -1,15 +1,9 @@
 #include <iostream>
-#include <functional>
-#include <algorithm>
-#include <chrono>
-#include <map>
-
+#include <direct.h>
 #include <httplib.h>
 #include <cookie.h>
-
 #include <bsoncxx/builder/stream/document.hpp>
 #include <bsoncxx/json.hpp>
-
 #include "users_list.hpp"
 
 using namespace std;
@@ -19,7 +13,7 @@ using bsoncxx::builder::stream::document;
 using bsoncxx::builder::stream::open_document;
 using bsoncxx::builder::stream::close_document;
 
-static std::string generateCookie(int cookie_size)
+std::string generateCookie(int cookie_size)
 {
     std::string letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
     std::string new_cookie = "";
@@ -51,6 +45,7 @@ void logoutHandler(const Request& req, Response& res);
 void updateRoleHandler(const Request& req, Response& res);
 void deleteUserHandler(const Request& req, Response& res);
 void uploadFileHandler(const Request& req, Response& res);
+void sendFileHandler(const Request& req, Response& res);
 
 int main() 
 {
@@ -62,6 +57,7 @@ int main()
     server.Post("/update-role", loginÑheck(updateRoleHandler));
     server.Post("/delete-user", loginÑheck(deleteUserHandler));
     server.Post("/upload-file", loginÑheck(uploadFileHandler));
+    server.Post("/send-file", loginÑheck(sendFileHandler));
 
     server.listen("0.0.0.0", 8080);
 }
@@ -253,6 +249,14 @@ void homeHandler(const Request& req, Response& res)
         html_response += u8"}";
         html_response += u8"</style>";
         html_response += u8"</header>";
+        html_response += u8"<script>";
+        html_response += u8"window.onload = function() {";
+        html_response += u8"    var urlParams = new URLSearchParams(window.location.search);";
+        html_response += u8"    if (urlParams.has('fileUploaded') && urlParams.get('fileUploaded') == 'true') {";
+        html_response += u8"        alert('Ôàéë óñïåøíî çàãğóæåí!');";
+        html_response += u8"    }";
+        html_response += u8"};";
+        html_response += u8"</script>";
         html_response += u8"<body><div><h1>Òàáëèöà ïîëüçîâàòåëåé</h1>";
         html_response += u8"<table><tr><td><strong>Èìÿ</strong></td><td><strong>Ãğóïïà</strong></td><td><strong>Ğîëü</strong></td></tr>";
 
@@ -283,6 +287,9 @@ void homeHandler(const Request& req, Response& res)
         html_response += u8"<form action='/upload-file' method='post' enctype='multipart/form-data'>";
         html_response += u8"<input type='file' name='file' accept='.xlsx'>";
         html_response += u8"<input type='submit'>";
+        html_response += u8"</form>";
+        html_response += u8"<form action='/send-file' method='post'>";
+        html_response += u8"<button type='sumbit'>Îòïğàâèòü äàííûå</button>";
         html_response += u8"</form>";
         html_response += u8"</div>";
         html_response += u8"</body>";
@@ -341,7 +348,7 @@ void updateRoleHandler(const Request& req, Response& res)
     res.set_redirect("/");
 }
 
-static void deleteUserFromVector(const std::string& username) 
+void deleteUserFromVector(const std::string& username) 
 {
     users.erase(std::remove_if(users.begin(), users.end(), 
         [&username](const User& user) { return user.name == username; }), users.end());
@@ -373,6 +380,30 @@ void deleteUserHandler(const Request& req, Response& res)
     }
 }
 
+void send_file_to_server(const std::string& server_path, const std::string& file_path) 
+{
+    httplib::Client cli("26.38.28.245", 8090);
+
+    std::ifstream input_file(file_path, std::ios::binary);
+    std::vector<char> file_data((std::istreambuf_iterator<char>(input_file)), std::istreambuf_iterator<char>());
+
+    httplib::MultipartFormDataItems items = 
+    {
+        { "file", file_data.data(), file_path, "application/octet-stream" },
+    };
+
+    auto res = cli.Post(server_path.c_str(), items);
+
+    if (res && res->status == 200) 
+    {
+        std::cout << "File sent successfully\n";
+    }
+    else 
+    {
+        std::cout << "Failed to send file\n";
+    }
+}
+
 void uploadFileHandler(const Request& req, Response& res)
 {
     if (req.method == "POST")
@@ -390,14 +421,24 @@ void uploadFileHandler(const Request& req, Response& res)
         }
 
         const auto& file = req.get_file_value("file");
-        std::string upload_directory = "C:\\Users\\maxim\\source\\repos\\Web_Server\\Web_Server\\";
-        std::string path = upload_directory + "schedule.xlsx";
+        std::string upload_directory = "C:\\Users\\maxim\\PycharmProjects\\excel_parser";
+        std::string path = upload_directory + "\\schedule.xlsx";
 
         std::ofstream ofs(path, std::ios::binary);
         ofs << file.content;
 
+        _chdir("C:\\Users\\maxim\\PycharmProjects\\excel_parser\\");
         system("start main.exe");
 
+        res.set_redirect("/?fileUploaded=true");
+    }
+}
+
+void sendFileHandler(const Request& req, Response& res)
+{
+    if (req.method == "POST")
+    {
+        send_file_to_server("/upload", "C:\\Users\\maxim\\PycharmProjects\\excel_parser\\output.json");
         res.set_redirect("/");
     }
 }
