@@ -1,15 +1,9 @@
 #include <iostream>
-#include <functional>
-#include <algorithm>
-#include <chrono>
-#include <map>
-
+#include <direct.h>
 #include <httplib.h>
 #include <cookie.h>
-
 #include <bsoncxx/builder/stream/document.hpp>
 #include <bsoncxx/json.hpp>
-
 #include "users_list.hpp"
 
 using namespace std;
@@ -19,7 +13,7 @@ using bsoncxx::builder::stream::document;
 using bsoncxx::builder::stream::open_document;
 using bsoncxx::builder::stream::close_document;
 
-static std::string generateCookie(int cookie_size)
+std::string generateCookie(int cookie_size)
 {
     std::string letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
     std::string new_cookie = "";
@@ -44,24 +38,26 @@ mongocxx::v_noabi::collection collection = connection["Users_DataBase"]["Users"]
 
 std::vector<User> users = make_users_list();
 
-httplib::Server::Handler login—heck(httplib::Server::Handler next);
+httplib::Server::Handler login–°heck(httplib::Server::Handler next);
 void loginHandler(const Request& req, Response& res);
 void homeHandler(const Request& req, Response& res);
 void logoutHandler(const Request& req, Response& res);
 void updateRoleHandler(const Request& req, Response& res);
 void deleteUserHandler(const Request& req, Response& res);
 void uploadFileHandler(const Request& req, Response& res);
+void sendFileHandler(const Request& req, Response& res);
 
 int main() 
 {
     Server server;
-    server.Get("/", login—heck(homeHandler));
-    server.Get("/login", login—heck(loginHandler));
-    server.Post("/login", login—heck(loginHandler));
-    server.Get("/logout", login—heck(logoutHandler));
-    server.Post("/update-role", login—heck(updateRoleHandler));
-    server.Post("/delete-user", login—heck(deleteUserHandler));
-    server.Post("/upload-file", login—heck(uploadFileHandler));
+    server.Get("/", login–°heck(homeHandler));
+    server.Get("/login", login–°heck(loginHandler));
+    server.Post("/login", login–°heck(loginHandler));
+    server.Get("/logout", login–°heck(logoutHandler));
+    server.Post("/update-role", login–°heck(updateRoleHandler));
+    server.Post("/delete-user", login–°heck(deleteUserHandler));
+    server.Post("/upload-file", login–°heck(uploadFileHandler));
+    server.Post("/send-file", login–°heck(sendFileHandler));
 
     server.listen("0.0.0.0", 8080);
 }
@@ -77,7 +73,7 @@ static bool is_session_exist(const Request& req)
     return true;
 }
 
-httplib::Server::Handler login—heck(httplib::Server::Handler next) 
+httplib::Server::Handler login–°heck(httplib::Server::Handler next) 
 {
     return [next](const Request& req, Response& res) 
     {
@@ -151,10 +147,10 @@ void loginHandler(const Request& req, Response& res)
 		        <form method="post" action="/login">
 				    <div class="mainContainer">
 						<label for="username"></label>
-						<input type="text" autocomplete="off" placeholder="¬‚Â‰ËÚÂ ËÏˇ" name="username" required>
+						<input type="text" autocomplete="off" placeholder="–í–≤–µ–¥–∏—Ç–µ –∏–º—è" name="username" required>
 						<label for="password"></label>
-                        <input type="password" autocomplete="off" placeholder="¬‚Â‰ËÚÂ Ô‡ÓÎ¸" name="password" required>
-						<button class="btn-new" type="submit">¬ıÓ‰</button>
+                        <input type="password" autocomplete="off" placeholder="–í–≤–µ–¥–∏—Ç–µ –ø–∞—Ä–æ–ª—å" name="password" required>
+						<button class="btn-new" type="submit">–í—Ö–æ–¥</button>
 				    </div>
 		        </form>
             </body>
@@ -253,8 +249,16 @@ void homeHandler(const Request& req, Response& res)
         html_response += u8"}";
         html_response += u8"</style>";
         html_response += u8"</header>";
-        html_response += u8"<body><div><h1>“‡·ÎËˆ‡ ÔÓÎ¸ÁÓ‚‡ÚÂÎÂÈ</h1>";
-        html_response += u8"<table><tr><td><strong>»Ïˇ</strong></td><td><strong>√ÛÔÔ‡</strong></td><td><strong>–ÓÎ¸</strong></td></tr>";
+        html_response += u8"<script>";
+        html_response += u8"window.onload = function() {";
+        html_response += u8"    var urlParams = new URLSearchParams(window.location.search);";
+        html_response += u8"    if (urlParams.has('fileUploaded') && urlParams.get('fileUploaded') == 'true') {";
+        html_response += u8"        alert('–§–∞–π–ª —É—Å–ø–µ—à–Ω–æ –∑–∞–≥—Ä—É–∂–µ–Ω!');";
+        html_response += u8"    }";
+        html_response += u8"};";
+        html_response += u8"</script>";
+        html_response += u8"<body><div><h1>–¢–∞–±–ª–∏—Ü–∞ –ø–æ–ª—å–∑–æ–≤–∞—Ç–µ–ª–µ–π</h1>";
+        html_response += u8"<table><tr><td><strong>–ò–º—è</strong></td><td><strong>–ì—Ä—É–ø–ø–∞</strong></td><td><strong>–†–æ–ª—å</strong></td></tr>";
 
         for (const auto& user : users)
         {
@@ -268,7 +272,7 @@ void homeHandler(const Request& req, Response& res)
             html_response += u8"</form>";
             html_response += u8"<form action='/delete-user' method='post'>";
             html_response += u8"<input type='hidden' name='username' value='" + user.name + "'>";
-            html_response += u8"<button class='delete-button' type='submit'>”‰‡ÎËÚ¸</button>";
+            html_response += u8"<button class='delete-button' type='submit'>–£–¥–∞–ª–∏—Ç—å</button>";
             html_response += u8"</form>";
             html_response += u8"</td></tr>";
         }
@@ -276,13 +280,16 @@ void homeHandler(const Request& req, Response& res)
         html_response += u8"</table>";
         html_response += u8"<br><br>";
         html_response += u8"<form action='/logout' method='get'>";
-        html_response += u8"<button class='logout-button' type='submit'>¬˚ıÓ‰</button>";
+        html_response += u8"<button class='logout-button' type='submit'>–í—ã—Ö–æ–¥</button>";
         html_response += u8"</form>";
         html_response += u8"</div>";
         html_response += u8"<div>";
         html_response += u8"<form action='/upload-file' method='post' enctype='multipart/form-data'>";
         html_response += u8"<input type='file' name='file' accept='.xlsx'>";
         html_response += u8"<input type='submit'>";
+        html_response += u8"</form>";
+        html_response += u8"<form action='/send-file' method='post'>";
+        html_response += u8"<button type='sumbit'>–û—Ç–ø—Ä–∞–≤–∏—Ç—å –¥–∞–Ω–Ω—ã–µ</button>";
         html_response += u8"</form>";
         html_response += u8"</div>";
         html_response += u8"</body>";
@@ -341,7 +348,7 @@ void updateRoleHandler(const Request& req, Response& res)
     res.set_redirect("/");
 }
 
-static void deleteUserFromVector(const std::string& username) 
+void deleteUserFromVector(const std::string& username) 
 {
     users.erase(std::remove_if(users.begin(), users.end(), 
         [&username](const User& user) { return user.name == username; }), users.end());
@@ -373,6 +380,30 @@ void deleteUserHandler(const Request& req, Response& res)
     }
 }
 
+void send_file_to_server(const std::string& server_path, const std::string& file_path) 
+{
+    httplib::Client cli("26.38.28.245", 8090);
+
+    std::ifstream input_file(file_path, std::ios::binary);
+    std::vector<char> file_data((std::istreambuf_iterator<char>(input_file)), std::istreambuf_iterator<char>());
+
+    httplib::MultipartFormDataItems items = 
+    {
+        { "file", file_data.data(), file_path, "application/octet-stream" },
+    };
+
+    auto res = cli.Post(server_path.c_str(), items);
+
+    if (res && res->status == 200) 
+    {
+        std::cout << "File sent successfully\n";
+    }
+    else 
+    {
+        std::cout << "Failed to send file\n";
+    }
+}
+
 void uploadFileHandler(const Request& req, Response& res)
 {
     if (req.method == "POST")
@@ -390,14 +421,24 @@ void uploadFileHandler(const Request& req, Response& res)
         }
 
         const auto& file = req.get_file_value("file");
-        std::string upload_directory = "C:\\Users\\maxim\\source\\repos\\Web_Server\\Web_Server\\";
-        std::string path = upload_directory + "schedule.xlsx";
+        std::string upload_directory = "C:\\Users\\maxim\\PycharmProjects\\excel_parser";
+        std::string path = upload_directory + "\\schedule.xlsx";
 
         std::ofstream ofs(path, std::ios::binary);
         ofs << file.content;
 
+        _chdir("C:\\Users\\maxim\\PycharmProjects\\excel_parser\\");
         system("start main.exe");
 
+        res.set_redirect("/?fileUploaded=true");
+    }
+}
+
+void sendFileHandler(const Request& req, Response& res)
+{
+    if (req.method == "POST")
+    {
+        send_file_to_server("/upload", "C:\\Users\\maxim\\PycharmProjects\\excel_parser\\output.json");
         res.set_redirect("/");
     }
 }
