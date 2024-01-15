@@ -7,16 +7,16 @@
 
 struct User
 {
-    std::string name;
+    std::string surname;
     std::string group;
-    std::string role;
+    std::string position;
 };
 
 std::vector<User> make_users_list()
 {
     mongocxx::instance inst{};
-    mongocxx::client connection{ mongocxx::uri{"mongodb+srv://admin:qwertypassword@cluster0.ogjb22j.mongodb.net/?"} };
-    mongocxx::v_noabi::collection collection = connection["Users_DataBase"]["Users"];
+    mongocxx::client connection{ mongocxx::uri{"mongodb+srv://Aboba:1van@ivan.vi217jg.mongodb.net/?retryWrites=true&w=majority"} };
+    mongocxx::v_noabi::collection collection = connection["schedule"]["users"];
 
     std::vector<User> users;
 
@@ -24,15 +24,15 @@ std::vector<User> make_users_list()
 
     for (const bsoncxx::v_noabi::document::view& document : cursor)
     {
-        bsoncxx::document::element name = document["Name"];
-        bsoncxx::document::element group = document["Group"];
-        bsoncxx::document::element role = document["Role"];
+        bsoncxx::document::element surname = document["surname"];
+        bsoncxx::document::element group = document["groupe"];
+        bsoncxx::document::element role = document["position"];
 
         User user;
 
-        user.name = std::string{ name.get_string().value };
+        user.surname = std::string{ surname.get_string().value };
         user.group = std::string{ group.get_string().value };
-        user.role = std::string{ role.get_string().value };
+        user.position = std::string{ role.get_string().value };
 
         users.push_back(user);
     }
@@ -40,47 +40,13 @@ std::vector<User> make_users_list()
     return users;
 }
 
-void update_users_list(std::vector<User>* users, mongocxx::v_noabi::collection collection)
-{
-    mongocxx::cursor cursor = collection.find({});
-
-    for (const bsoncxx::v_noabi::document::view& document : cursor)
-    {
-        bsoncxx::document::element name = document["Name"];
-        bsoncxx::document::element group = document["Group"];
-        bsoncxx::document::element role = document["Role"];
-
-        User user;
-
-        user.name = std::string{ name.get_string().value };
-        user.group = std::string{ group.get_string().value };
-        user.role = std::string{ role.get_string().value };
-
-        bool is_present = false;
-        for (const User& existing_user : *users)
-        {
-            if (existing_user.name == user.name && existing_user.group == user.group && existing_user.role == user.role)
-            {
-                is_present = true;
-                break;
-            }
-        }
-
-        if (!is_present)
-        {
-            users->push_back(user);
-        }
-    }
-}
-
 std::vector<User> make_admins_list(std::vector<User> users)
 {
     std::vector<User> admins;
-    std::vector<User> all_users = users;
 
-    for (const auto& user : all_users)
+    for (const auto& user : users)
     {
-        if (user.role == "Administrator")
+        if (user.position == "Admin")
         {
             admins.push_back(user);
         }
@@ -89,11 +55,11 @@ std::vector<User> make_admins_list(std::vector<User> users)
     return admins;
 }
 
-bool is_in_admins_list(const std::string& name, const std::vector<User>& admins)
+bool is_in_admins_list(const std::string& surname, const std::vector<User>& admins)
 {
     for (const auto& admin : admins)
     {
-        if (admin.name == name)
+        if (admin.surname == surname)
         {
             return true;
         }
